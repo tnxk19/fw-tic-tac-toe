@@ -5,6 +5,14 @@ function Game() {
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState(true);
   const [winner, setWinner] = useState(null);
+  const [history, setHistory] = useState([
+    {
+      move: "Go to game start",
+      squares: Array(9).fill(null),
+      xIsNext: true,
+    },
+  ]);
+  const [currentMove, setCurrentMove] = useState(0);
 
   //Declaring a Winner
   useEffect(() => {
@@ -14,7 +22,7 @@ function Game() {
     } else {
       setWinner(null);
     }
-  }, [squares]);
+  }, [squares, history]);
 
   //function to check if a player has won.
   //If a player has won, we can display text such as “Winner: X” or “Winner: O”.
@@ -45,33 +53,112 @@ function Game() {
 
   //Handle player
   const handleClick = (i) => {
-    if (squares[i] || winner) {
+    const current = history[currentMove];
+
+    if (current.squares[i] || winner) {
       return;
     }
-    const newSquares = [...squares];
-    newSquares[i] = xIsNext ? "X" : "O";
+
+    const newSquares = [...current.squares];
+
+    newSquares[i] = current.xIsNext ? "X" : "O";
+
+    const historyUntilCurrent = history.slice(0, currentMove + 1);
+
+    const newMove = {
+      move: `Go to move #${historyUntilCurrent.length}`,
+      squares: newSquares,
+      xIsNext: !current.xIsNext,
+    };
+
+    setHistory([...historyUntilCurrent, newMove]);
+
+    setCurrentMove(historyUntilCurrent.length);
+
     setSquares(newSquares);
-    setXIsNext(!xIsNext);
+
+    setXIsNext(!current.xIsNext);
   };
+
+  //   const handleClick = (i) => {
+  //   const current = history[currentMove];
+
+  //   if (current.squares[i]) {
+  //     return;
+  //   }
+
+  //   const newSquares = [...current.squares];
+
+  //   newSquares[i] =
+  //     current.xIsNext ? "X" : "O";
+
+  //   const historyUntilCurrent =
+  //     history.slice(0, currentMove + 1);
+
+  //   const newMove = {
+  //     squares: newSquares,
+  //     xIsNext: !current.xIsNext,
+  //   };
+
+  //   setHistory([
+  //     ...historyUntilCurrent,
+  //     newMove,
+  //   ]);
+
+  //   setCurrentMove(
+  //     historyUntilCurrent.length
+  //   );
+  // };
 
   //Restart game
   const handleRestart = () => {
     setSquares(Array(9).fill(null));
+
     setXIsNext(true);
+
     setWinner(null);
+
+    setCurrentMove(0);
+
+    setHistory([
+      {
+        move: "Go to game start",
+        squares: Array(9).fill(null),
+        xIsNext: true,
+      },
+    ]);
+  };
+  const jumpTo = (moveIndex) => {
+    const move = history[moveIndex];
+
+    setCurrentMove(moveIndex);
+    setSquares(move.squares);
+    setXIsNext(move.xIsNext);
   };
 
   return (
-    <div className="main">
-      <h2 className="result">Winner is: {winner ? winner : "N/N"}</h2>
-      <div className="game">
-        <span className="player">Next player is: {xIsNext ? "X" : "O"}</span>
-        <Board squares={squares} handleClick={handleClick} />
+    <>
+      <div className="main">
+        <h2 className="result">Winner is: {winner ? winner : "N/N"}</h2>
+        <div className="game">
+          <span className="player">Next player is: {xIsNext ? "X" : "O"}</span>
+          <Board squares={squares} handleClick={handleClick} />
+          <span className="history">
+            <h4>Game History</h4>
+            <ul>
+              {history.map((item, index) => (
+                <li key={index}>
+                  <button onClick={() => jumpTo(index)}>{item.move}</button>
+                </li>
+              ))}
+            </ul>
+          </span>
+        </div>
+        <button onClick={handleRestart} className="restart-btn">
+          Restart
+        </button>
       </div>
-      <button onClick={handleRestart} className="restart-btn">
-        Restart
-      </button>
-    </div>
+    </>
   );
 }
 
